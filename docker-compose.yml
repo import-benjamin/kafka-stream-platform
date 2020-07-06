@@ -1,0 +1,50 @@
+version: "3.7"
+services:
+  zookeeper:
+    image: "confluentinc/cp-zookeeper"
+    networks: [my_network]
+    volumes: [./vol/data/zookeeper:/var/lib/zookeeper/data]
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 32181
+      ZOOKEEPER_TICK_TIME: 2000
+  kafka0:
+    image: "confluentinc/cp-kafka"
+    networks: [my_network]
+    volumes: [./vol/data/kafka0:/var/lib/kafka/data]
+    ports: [ 19092:19092 ]
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:32181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka0:19092,DOCKER://kafka0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: DOCKER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+  kafka1:
+    image: "confluentinc/cp-kafka"
+    networks: [my_network]
+    volumes:
+      - ./vol/data/kafka1:/var/lib/kafka/data
+    ports: [ 29092:29092 ]
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:32181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:29092,DOCKER://kafka1:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: DOCKER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+  kafka2:
+    image: "confluentinc/cp-kafka"
+    networks: [my_network]
+    volumes:
+      - ./vol/data/kafka2:/var/lib/kafka/data
+    ports: [ 39092:39092 ]
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:32181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:39092,DOCKER://kafka2:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: DOCKER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+networks:
+  my_network:

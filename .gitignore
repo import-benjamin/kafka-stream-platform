@@ -1,1 +1,9 @@
 vol
+*.key
+*.der
+*.csr
+*.jks
+*_creds
+*.crt
+*.pem
+*.p12

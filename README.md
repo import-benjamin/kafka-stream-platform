@@ -3,6 +3,13 @@ This repository contains usecase of Kafka in Docker with other microservices
 
 ## Quickstart
 
+Before using `docker` we must generate certificates used by differents nodes to authenticate.
+
+```console
+$ sudo apt-get install -y openjdk-14-jre-headless
+$ bash generate-cert.sh
+```
+
 To start containers I'm using `docker-compose`, but feel free to use something else if you feel more confident :
 
 ```console

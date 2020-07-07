@@ -1,4 +1,5 @@
 from flask import Flask
+from flask import jsonify
 from confluent_kafka import Producer
 from confluent_kafka.admin import AdminClient
 
@@ -20,7 +21,7 @@ def index():
 @app.route("/topics")
 def topics():
   topics = kadmin.list_topics().topics
-  return str(topics)
+  return jsonify(topics)
 
 @app.route("/send/<msg>")
 def send(msg):

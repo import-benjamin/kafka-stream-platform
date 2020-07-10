@@ -58,4 +58,4 @@ done
 
 # waiting for brokers to become available
 		
-# while ! openssl s_client -connect kafka-1:19093 -tls1 > /dev/null 2>&1 <<< "q" ; do echo -n "." & sleep 1 ; done
+# while ! openssl s_client -connect kafka1:19093 -tls1 > /dev/null 2>&1 <<< "q" ; do echo -n "." & sleep 1 ; done

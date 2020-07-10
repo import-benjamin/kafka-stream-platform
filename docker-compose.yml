@@ -5,7 +5,7 @@ services:
     container_name: zookeeper0
     environment:
       - ZOOKEEPER_SERVER_ID=1
-      - ZOOKEEPER_CLIENT_PORT=12181
+      - ZOOKEEPER_CLIENT_PORT=2181
       - ZOOKEEPER_TICK_TIME=2000
       - ZOOKEEPER_INIT_LIMIT=5
       - ZOOKEEPER_SERVERS=zookeeper0:2888:3888;zookeeper1:2888:3888;zookeeper2:2888:3888
@@ -16,12 +16,17 @@ services:
     restart: "no"
     volumes: 
       - ./vol/data/zookeeper0:/var/lib/zookeeper/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100k"
+        max-file: "10"
 
   zookeeper1:
     container_name: zookeeper1
     environment:
       - ZOOKEEPER_SERVER_ID=2
-      - ZOOKEEPER_CLIENT_PORT=22181
+      - ZOOKEEPER_CLIENT_PORT=2181
       - ZOOKEEPER_TICK_TIME=2000
       - ZOOKEEPER_INIT_LIMIT=5
       - ZOOKEEPER_SERVERS=zookeeper0:2888:3888;zookeeper1:2888:3888;zookeeper2:2888:3888
@@ -32,12 +37,17 @@ services:
     restart: "no"
     volumes: 
       - ./vol/data/zookeeper1:/var/lib/zookeeper/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100k"
+        max-file: "10"
 
   zookeeper2:
     container_name: zookeeper2
     environment:
       - ZOOKEEPER_SERVER_ID=3
-      - ZOOKEEPER_CLIENT_PORT=32181
+      - ZOOKEEPER_CLIENT_PORT=2181
       - ZOOKEEPER_TICK_TIME=2000
       - ZOOKEEPER_INIT_LIMIT=5
       - ZOOKEEPER_SERVERS=zookeeper0:2888:3888;zookeeper1:2888:3888;zookeeper2:2888:3888
@@ -48,7 +58,11 @@ services:
     restart: "no"
     volumes: 
       - ./vol/data/zookeeper2:/var/lib/zookeeper/data
-
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100k"
+        max-file: "10"
 
   kafka1:
     container_name: kafka1
@@ -58,10 +72,9 @@ services:
       - zookeeper2
     environment:
       - KAFKA_BROKER_ID=1
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:12181
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:12181,zookeeper1:22181,zookeeper2:32181
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
-      - KAFKA_ADVERTISED_LISTENERS=SSL://kafka1:19093,DOCKER://kafka1:9092
+      - KAFKA_ADVERTISED_LISTENERS=SSL://kafka1:9093,DOCKER://kafka1:9092
       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=SSL:SSL,DOCKER:PLAINTEXT
       - KAFKA_INTER_BROKER_LISTENER_NAME=DOCKER
       - KAFKA_SSL_KEYSTORE_FILENAME=kafka.kafka1.keystore.jks
@@ -70,6 +83,7 @@ services:
       - KAFKA_SSL_TRUSTSTORE_FILENAME=kafka.kafka1.truststore.jks
       - KAFKA_SSL_TRUSTSTORE_CREDENTIALS=kafka1_truststore_creds
       - KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM="HTTPS"
+      - KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE=false
     image: "confluentinc/cp-kafka"
     networks: 
       - my_network
@@ -79,6 +93,12 @@ services:
     volumes: 
       - ./vol/data/kafka1:/var/lib/kafka/data
       - ./kafka1-creds:/etc/kafka/secrets
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100k"
+        max-file: "10"
+
 
   kafka2:
     container_name: kafka2
@@ -88,10 +108,9 @@ services:
       - zookeeper2
     environment:
       - KAFKA_BROKER_ID=2
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:12181
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:12181,zookeeper1:22181,zookeeper2:32181
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
-      - KAFKA_ADVERTISED_LISTENERS=SSL://kafka2:29093,DOCKER://kafka2:9092
+      - KAFKA_ADVERTISED_LISTENERS=SSL://kafka2:9093,DOCKER://kafka2:9092
       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=SSL:SSL,DOCKER:PLAINTEXT
       - KAFKA_INTER_BROKER_LISTENER_NAME=DOCKER
       - KAFKA_SSL_KEYSTORE_FILENAME=kafka.kafka2.keystore.jks
@@ -100,6 +119,7 @@ services:
       - KAFKA_SSL_TRUSTSTORE_FILENAME=kafka.kafka2.truststore.jks
       - KAFKA_SSL_TRUSTSTORE_CREDENTIALS=kafka1_truststore_creds
       - KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM="HTTPS"
+      - KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE=false
     image: "confluentinc/cp-kafka"
     networks: 
       - my_network
@@ -109,6 +129,11 @@ services:
     volumes:
       - ./vol/data/kafka2:/var/lib/kafka/data
       - ./kafka2-creds:/etc/kafka/secrets
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100k"
+        max-file: "10"
 
   kafka3:
     container_name: kafka3
@@ -118,10 +143,9 @@ services:
       - zookeeper2
     environment:
       - KAFKA_BROKER_ID=3
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:12181
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:12181,zookeeper1:22181,zookeeper2:32181
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
-      - KAFKA_ADVERTISED_LISTENERS=SSL://kafka3:39093,DOCKER://kafka3:9092
+      - KAFKA_ADVERTISED_LISTENERS=SSL://kafka3:9093,DOCKER://kafka3:9092
       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=SSL:SSL,DOCKER:PLAINTEXT
       - KAFKA_INTER_BROKER_LISTENER_NAME=DOCKER
       - KAFKA_SSL_KEYSTORE_FILENAME=kafka.kafka3.keystore.jks
@@ -130,6 +154,7 @@ services:
       - KAFKA_SSL_TRUSTSTORE_FILENAME=kafka.kafka3.truststore.jks
       - KAFKA_SSL_TRUSTSTORE_CREDENTIALS=kafka3_truststore_creds
       - KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM="HTTPS"
+      - KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE=false
     image: "confluentinc/cp-kafka"
     networks: 
       - my_network
@@ -139,6 +164,11 @@ services:
     volumes:
       - ./vol/data/kafka3:/var/lib/kafka/data
       - ./kafka3-creds:/etc/kafka/secrets
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100k"
+        max-file: "10"
 
 
   api_python:
@@ -160,3 +190,4 @@ services:
 
 networks:
   my_network:
+    

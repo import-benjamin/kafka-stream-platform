@@ -1,9 +1,7 @@
 from flask import Flask
-from flask import jsonify
-from confluent_kafka import Producer
-from confluent_kafka.admin import AdminClient
-from logging import getLogger
-from logging import DEBUG
+from confluent_kafka import Producer, Consumer
+from confluent_kafka.admin import ClusterMetadata
+from logging import getLogger, DEBUG
 from os.path import exists
 
 client_certificate_path="/var/lib/kafka/client.certificate.pem"
@@ -13,46 +11,47 @@ root_certificate_path="/var/lib/certs/ca.crt"
 logger = getLogger("APY")
 logger.setLevel(DEBUG)
 
-if not exists(client_certificate_path): logger.error("Certificate is missing.")
-if not exists(client_key_path): logger.error("Key is missing.")
-if not exists(root_certificate_path): logger.error("Root certificate is missing.")
+for afile in  (client_certificate_path, client_key_path, root_certificate_path):
+  logger.info(f"{afile} ok.") if exists(afile) else logger.error(f"{afile} is missing")
 
 p = Producer({
-  'bootstrap.servers': 'kafka0:19093,kafka1:29093,kafka2:39093',
-  'ssl.certificate.location': client_certificate_path,
-  'ssl.key.location': client_key_path,
-  'ssl.ca.location': root_certificate_path
-  })
-kadmin = AdminClient({
-  'bootstrap.servers': 'kafka0:19093,kafka1:29093,kafka2:39093',
-  'ssl.certificate.location':client_certificate_path,
-  'ssl.key.location': client_key_path,
-  'ssl.ca.location': root_certificate_path
-  })
+  "bootstrap.servers": "kafka1:9093,kafka2:9093,kafka3:9093",
+  "security.protocol": "SSL",
+  "ssl.certificate.location": client_certificate_path,
+  "ssl.key.location": client_key_path,
+  "ssl.ca.location": root_certificate_path
+})
+
+c = Consumer({
+  "bootstrap.servers": "kafka1:9093,kafka2:9093,kafka3:9093",
+  "security.protocol": "SSL",
+  "ssl.certificate.location": client_certificate_path,
+  "ssl.key.location": client_key_path,
+  "ssl.ca.location": root_certificate_path,
+  "auto.offset.reset": "earliest",
+  "group.id": "cgroup"
+})
+
+def message_logger(err, msg):
+  logger.info(f"Message delivered {msg.topic()}, {msg.partition()}") if err is None else logger.error(f"An error happened while delivering message on topic {msg.topic()}")
+
 app = Flask(__name__)
-
-
-
-def log_message(err, msg):
-  if err is not None:
-    logger.error(f"An error happened while sending message: {err}")
-  else:
-    logger.info(f"Message delivered: {msg}")
 
 @app.route("/")
 def index():
   return "To send a message use /send/:msg: path."
 
-@app.route("/topics")
-def topics():
-  topics = kadmin.list_topics().topics
-  return jsonify(topics)
-
 @app.route("/send/<msg>")
 def send(msg):
-  p.produce("messages", msg.encode("utf-8"), callback=log_message)
-  p.flush()
-  return "ok"
+  p.produce("messages", msg, callback=message_logger)
+  p.poll()
+  return msg
+
+@app.route("/topics")
+def topics():
+  metadata: ClusterMetadata = c.list_topics()
+  return str({"id": metadata.cluster_id, "brokers": metadata.brokers, "topics": metadata.topics, "origin_id": metadata.orig_broker_id, "origin_name": metadata.orig_broker_name, "controller": metadata.controller_id})
+
 
 if __name__ == "__main__":
     app.run()

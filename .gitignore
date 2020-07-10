@@ -7,3 +7,4 @@ vol
 *.crt
 *.pem
 *.p12
+*.srl

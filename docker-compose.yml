@@ -1,114 +1,162 @@
 version: "3.7"
 services:
+
   zookeeper0:
     container_name: zookeeper0
-    restart: always
-    image: "confluentinc/cp-zookeeper"
-    networks: [my_network]
-    volumes: [./vol/data/zookeeper:/var/lib/zookeeper/data]
     environment:
-      ZOOKEEPER_SERVER_ID: 1
-      ZOOKEEPER_CLIENT_PORT: 12181
-      ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_SERVERS: zookeeper0:2888:3888;zookeeper1:2888:3888;zookeeper2:2888:3888
+      - ZOOKEEPER_SERVER_ID=1
+      - ZOOKEEPER_CLIENT_PORT=12181
+      - ZOOKEEPER_TICK_TIME=2000
+      - ZOOKEEPER_INIT_LIMIT=5
+      - ZOOKEEPER_SERVERS=zookeeper0:2888:3888;zookeeper1:2888:3888;zookeeper2:2888:3888
+    hostname: zookeeper0
+    image: "confluentinc/cp-zookeeper"
+    networks: 
+      - my_network
+    restart: "no"
+    volumes: 
+      - ./vol/data/zookeeper0:/var/lib/zookeeper/data
+
   zookeeper1:
     container_name: zookeeper1
-    restart: always
-    image: "confluentinc/cp-zookeeper"
-    networks: [my_network]
-    volumes: [./vol/data/zookeeper:/var/lib/zookeeper/data]
     environment:
-      ZOOKEEPER_SERVER_ID: 2
-      ZOOKEEPER_CLIENT_PORT: 22181
-      ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_SERVERS: zookeeper0:2888:3888;zookeeper1:2888:3888;zookeeper2:2888:3888
+      - ZOOKEEPER_SERVER_ID=2
+      - ZOOKEEPER_CLIENT_PORT=22181
+      - ZOOKEEPER_TICK_TIME=2000
+      - ZOOKEEPER_INIT_LIMIT=5
+      - ZOOKEEPER_SERVERS=zookeeper0:2888:3888;zookeeper1:2888:3888;zookeeper2:2888:3888
+    hostname: zookeeper1
+    image: "confluentinc/cp-zookeeper"
+    networks: 
+      - my_network
+    restart: "no"
+    volumes: 
+      - ./vol/data/zookeeper1:/var/lib/zookeeper/data
+
   zookeeper2:
     container_name: zookeeper2
-    restart: always
+    environment:
+      - ZOOKEEPER_SERVER_ID=3
+      - ZOOKEEPER_CLIENT_PORT=32181
+      - ZOOKEEPER_TICK_TIME=2000
+      - ZOOKEEPER_INIT_LIMIT=5
+      - ZOOKEEPER_SERVERS=zookeeper0:2888:3888;zookeeper1:2888:3888;zookeeper2:2888:3888
+    hostname: zookeeper2
     image: "confluentinc/cp-zookeeper"
-    networks: [my_network]
-    volumes: [./vol/data/zookeeper:/var/lib/zookeeper/data]
-    environment:
-      ZOOKEEPER_SERVER_ID: 3
-      ZOOKEEPER_CLIENT_PORT: 32181
-      ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_SERVERS: zookeeper0:2888:3888;zookeeper1:2888:3888;zookeeper2:2888:3888
-  kafka0:
-    container_name: kafka0
-    restart: always
-    image: "confluentinc/cp-kafka"
-    networks: [my_network]
+    networks: 
+      - my_network
+    restart: "no"
     volumes: 
-      - ./vol/data/kafka0:/var/lib/kafka/data
-      - ./kafka1-creds:/etc/kafka/secrets
-    ports: [ 19092:19092 ]
-    depends_on: [zookeeper0, zookeeper1, zookeeper2]
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper0:12181,zookeeper1:22181,zookeeper2:32181
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_ADVERTISED_LISTENERS: SSL://kafka0:19093,PLAINTEXT://kafka0:19092,DOCKER://kafka0:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SSL:SSL,DOCKER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
-      KAFKA_SSL_KEYSTORE_FILENAME: kafka.kafka1.keystore.jks
-      KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka1_keystore_creds
-      KAFKA_SSL_KEY_CREDENTIALS: kafka1_sslkey_creds
-      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.kafka1.truststore.jks
-      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka1_truststore_creds
-      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
+      - ./vol/data/zookeeper2:/var/lib/zookeeper/data
+
+
   kafka1:
     container_name: kafka1
-    restart: always
-    image: "confluentinc/cp-kafka"
-    networks: [my_network]
-    volumes:
-      - ./vol/data/kafka1:/var/lib/kafka/data
-      - ./kafka2-creds:/etc/kafka/secrets
-    ports: [ 29092:29092 ]
-    depends_on: [zookeeper0, zookeeper1, zookeeper2]
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
     environment:
-      KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper0:12181,zookeeper1:22181,zookeeper2:32181
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_ADVERTISED_LISTENERS: SSL://kafka1:29093,PLAINTEXT://kafka1:29092,DOCKER://kafka1:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SSL:SSL,DOCKER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
-      KAFKA_SSL_KEYSTORE_FILENAME: kafka.kafka2.keystore.jks
-      KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka2_keystore_creds
-      KAFKA_SSL_KEY_CREDENTIALS: kafka2_sslkey_creds
-      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.kafka2.truststore.jks
-      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka1_truststore_creds
-      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:12181
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:12181,zookeeper1:22181,zookeeper2:32181
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
+      - KAFKA_ADVERTISED_LISTENERS=SSL://kafka1:19093,DOCKER://kafka1:9092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=SSL:SSL,DOCKER:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=DOCKER
+      - KAFKA_SSL_KEYSTORE_FILENAME=kafka.kafka1.keystore.jks
+      - KAFKA_SSL_KEYSTORE_CREDENTIALS=kafka1_keystore_creds
+      - KAFKA_SSL_KEY_CREDENTIALS=kafka1_sslkey_creds
+      - KAFKA_SSL_TRUSTSTORE_FILENAME=kafka.kafka1.truststore.jks
+      - KAFKA_SSL_TRUSTSTORE_CREDENTIALS=kafka1_truststore_creds
+      - KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM="HTTPS"
+    image: "confluentinc/cp-kafka"
+    networks: 
+      - my_network
+    ports:
+      - 19092:19092
+    restart: "no"
+    volumes: 
+      - ./vol/data/kafka1:/var/lib/kafka/data
+      - ./kafka1-creds:/etc/kafka/secrets
+
   kafka2:
     container_name: kafka2
-    restart: always
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    environment:
+      - KAFKA_BROKER_ID=2
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:12181
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:12181,zookeeper1:22181,zookeeper2:32181
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
+      - KAFKA_ADVERTISED_LISTENERS=SSL://kafka2:29093,DOCKER://kafka2:9092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=SSL:SSL,DOCKER:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=DOCKER
+      - KAFKA_SSL_KEYSTORE_FILENAME=kafka.kafka2.keystore.jks
+      - KAFKA_SSL_KEYSTORE_CREDENTIALS=kafka2_keystore_creds
+      - KAFKA_SSL_KEY_CREDENTIALS=kafka2_sslkey_creds
+      - KAFKA_SSL_TRUSTSTORE_FILENAME=kafka.kafka2.truststore.jks
+      - KAFKA_SSL_TRUSTSTORE_CREDENTIALS=kafka1_truststore_creds
+      - KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM="HTTPS"
     image: "confluentinc/cp-kafka"
-    networks: [my_network]
+    networks: 
+      - my_network
+    ports: 
+      - 29092:29092
+    restart: "no"
     volumes:
       - ./vol/data/kafka2:/var/lib/kafka/data
-      - ./kafka3-creds:/etc/kafka/secrets
-    ports: [ 39092:39092 ]
-    depends_on: [zookeeper0, zookeeper1, zookeeper2]
+      - ./kafka2-creds:/etc/kafka/secrets
+
+  kafka3:
+    container_name: kafka3
+    depends_on: 
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
     environment:
-      KAFKA_BROKER_ID: 3
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper0:12181,zookeeper1:22181,zookeeper2:32181
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_ADVERTISED_LISTENERS: SSL://kafka2:39093,PLAINTEXT://kafka2:39092,DOCKER://kafka2:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SSL:SSL,DOCKER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
-      KAFKA_SSL_KEYSTORE_FILENAME: kafka.kafka3.keystore.jks
-      KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka3_keystore_creds
-      KAFKA_SSL_KEY_CREDENTIALS: kafka3_sslkey_creds
-      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.kafka3.truststore.jks
-      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka3_truststore_creds
-      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
+      - KAFKA_BROKER_ID=3
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:12181
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper0:12181,zookeeper1:22181,zookeeper2:32181
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
+      - KAFKA_ADVERTISED_LISTENERS=SSL://kafka3:39093,DOCKER://kafka3:9092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=SSL:SSL,DOCKER:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=DOCKER
+      - KAFKA_SSL_KEYSTORE_FILENAME=kafka.kafka3.keystore.jks
+      - KAFKA_SSL_KEYSTORE_CREDENTIALS=kafka3_keystore_creds
+      - KAFKA_SSL_KEY_CREDENTIALS=kafka3_sslkey_creds
+      - KAFKA_SSL_TRUSTSTORE_FILENAME=kafka.kafka3.truststore.jks
+      - KAFKA_SSL_TRUSTSTORE_CREDENTIALS=kafka3_truststore_creds
+      - KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM="HTTPS"
+    image: "confluentinc/cp-kafka"
+    networks: 
+      - my_network
+    ports: 
+      - 39092:39092
+    restart: "no"
+    volumes:
+      - ./vol/data/kafka3:/var/lib/kafka/data
+      - ./kafka3-creds:/etc/kafka/secrets
+
+
   api_python:
-    container_name: "api_python"
     build: .
-    volumes: [ ./api.py:/home/api/app.py ]
-    depends_on: [kafka0, kafka1, kafka2]
-    ports: [5000:5000]
-    networks: [my_network]
+    container_name: "api_python"
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    networks: 
+      - my_network
+    ports: 
+      - 5000:5000
+    restart: "no"
+    volumes:
+      - ./api.py:/home/api/app.py
+      - ./client-creds:/var/lib/kafka
+      - ./ca.crt:/var/lib/certs/ca.crt
 
 networks:
   my_network:

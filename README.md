@@ -1,6 +1,8 @@
 # kafka-stream-platform
 This repository contains usecase of Kafka in Docker with other microservices 
 
+![docker-compose up -d](./assets/images/kafka-docker-compose.gif)
+
 ## Quickstart
 
 Before using `docker` we must generate certificates used by differents nodes to authenticate.
